@@ -1,0 +1,8 @@
+#!/bin/sh
+# Marks the work packages named in the last commit, e.g. "(B22)", as done in docs/status/progress.json.
+# It only edits the file; the change rides along in your next commit. Never fails a commit.
+command -v node >/dev/null 2>&1 || exit 0
+root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+[ -f "$root/scripts/progress.mjs" ] || exit 0
+node "$root/scripts/progress.mjs" hook-commit || true
+exit 0

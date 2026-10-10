@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>متابعة المشروع</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg-page, #FBFAF6); color: var(--text, #1C333B);
+    font-family: "Readex Pro", system-ui, sans-serif; font-size: 15px; line-height: 1.5; }
+  main { max-inline-size: 1100px; margin-inline: auto; padding: 24px 20px 48px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+  h1 { margin: 0; font-size: 1.25rem; font-weight: 600; }
+  .muted { color: var(--text-2, #5b6b70); font-size: 0.8125rem; }
+  .num { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
+  .hero { margin-block: 20px 28px; padding: 20px; background: var(--bg-surface, #fff);
+    border: 1px solid var(--line-1, #e2dfd6); border-radius: 16px; }
+  .hero__top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .hero__pct { font-size: 3rem; font-weight: 700; line-height: 1; }
+  .track { position: relative; block-size: 14px; border-radius: 999px; background: var(--paper-3, #ece9e0);
+    overflow: hidden; margin-block-start: 14px; }
+  .track__fill { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: 999px;
+    background: var(--primary, #1C333B); transition: inline-size 600ms ease; }
+  .track__active { position: absolute; inset-block: 0; border-radius: 999px;
+    background: var(--accent, #F26A4B); opacity: 0.55; }
+  .milestones { position: relative; block-size: 46px; margin-block-start: 4px; font-size: 0.6875rem; }
+  .milestone { position: absolute; transform: translateX(50%); text-align: center; color: var(--text-2, #5b6b70);
+    inline-size: 90px; }
+  [dir="ltr"] .milestone { transform: translateX(-50%); }
+  .milestone::before { content: ""; display: block; inline-size: 2px; block-size: 8px; margin: 0 auto 2px;
+    background: var(--line-strong, #9aa); }
+  .milestone.is-here { color: var(--accent-text, #B44129); font-weight: 600; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .card { background: var(--bg-surface, #fff); border: 1px solid var(--line-1, #e2dfd6); border-radius: 12px; padding: 16px; }
+  .card h2 { margin: 0 0 10px; font-size: 1rem; font-weight: 600; }
+  ul { margin: 0; padding: 0; list-style: none; }
+  li { padding-block: 6px; border-block-end: 1px solid var(--line-1, #eee); }
+  li:last-child { border-block-end: 0; }
+  .now li { display: flex; justify-content: space-between; gap: 8px; }
+  .pill { font-size: 0.6875rem; padding: 2px 8px; border-radius: 999px; background: var(--accent-tint, #FCEBE4);
+    color: var(--accent-text, #B44129); white-space: nowrap; }
+  .pulse { inline-size: 8px; block-size: 8px; border-radius: 50%; background: var(--accent, #F26A4B);
+    display: inline-block; margin-inline-end: 6px; animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: 0.25; } }
+  @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } .track__fill { transition: none; } }
+  .phases { margin-block-start: 16px; display: grid; gap: 10px; }
+  details { background: var(--bg-surface, #fff); border: 1px solid var(--line-1, #e2dfd6); border-radius: 12px; padding: 12px 16px; }
+  summary { cursor: pointer; display: grid; grid-template-columns: 1fr 160px 48px; gap: 12px; align-items: center; }
+  summary .track { margin: 0; block-size: 8px; }
+  .item { display: flex; justify-content: space-between; gap: 8px; font-size: 0.875rem; }
+  .st { font-size: 0.75rem; }
+  .st--done { color: var(--positive-text, #1f7a5c); }
+  .st--active { color: var(--accent-text, #B44129); font-weight: 600; }
+  .st--todo { color: var(--text-muted, #889); }
+  .err { color: var(--danger, #c33); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>متابعة المشروع: منصة التجارة الإلكترونية</h1>
+    <span class="muted">آخر تحديث: <span id="updated" class="num">...</span> · بيتحدّث لوحده كل 10 ثواني</span>
+  </header>
+
+  <section class="hero" aria-labelledby="overall">
+    <div class="hero__top">
+      <span id="overall" class="hero__pct num">0%</span>
+      <span>من المشروع كله خلص</span>
+      <span class="muted" id="overallSub"></span>
+    </div>
+    <div class="track" role="progressbar" aria-labelledby="overall" id="bar">
+      <div class="track__fill" id="fill"></div>
+      <div class="track__active" id="activeFill"></div>
+    </div>
+    <div class="milestones" id="milestones"></div>
+  </section>
+
+  <div class="grid">
+    <section class="card now"><h2>شغال دلوقتي</h2><ul id="now"></ul></section>
+    <section class="card"><h2>الجاي بالترتيب</h2><ul id="next"></ul></section>
+    <section class="card"><h2>آخر حاجات خلصت</h2><ul id="log"></ul></section>
+  </div>
+
+  <section class="phases" id="phases" aria-label="المراحل"></section>
+  <p class="err" id="error" hidden></p>
+</main>
+<script>
+const statusLabel = { done: 'خلص', active: 'شغال', todo: 'لسه' };
+const pct = (n) => Math.round(n * 100);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const open = new Set();
+
+function score(items) {
+  let total = 0, done = 0, active = 0;
+  for (const it of items) {
+    total += it.w;
+    if (it.status === 'done') done += it.w;
+    else if (it.status === 'active') active += it.w * (it.progress ?? 0.5);
+  }
+  return { total, done, active };
+}
+
+function render(data) {
+  const all = data.phases.flatMap((p) => p.items);
+  const s = score(all);
+  const donePct = (s.done + s.active) / s.total;
+  document.getElementById('overall').textContent = pct(donePct) + '%';
+  document.getElementById('overallSub').textContent =
+    `${all.filter((i) => i.status === 'done').length} مهمة خلصت من ${all.length}، و${all.filter((i) => i.status === 'active').length} شغالين`;
+  document.getElementById('fill').style.inlineSize = (s.done / s.total * 100) + '%';
+  const act = document.getElementById('activeFill');
+  act.style.insetInlineStart = (s.done / s.total * 100) + '%';
+  act.style.inlineSize = (s.active / s.total * 100) + '%';
+  document.getElementById('bar').setAttribute('aria-valuenow', pct(donePct));
+  document.getElementById('updated').textContent = new Date(data.updated).toLocaleString('ar-EG-u-nu-latn', { dateStyle: 'medium', timeStyle: 'short' });
+
+  const ms = document.getElementById('milestones'); ms.replaceChildren();
+  let acc = 0;
+  const here = data.phases.find((p) => p.items.some((i) => i.status === 'active')) ?? data.phases.find((p) => p.items.some((i) => i.status !== 'done'));
+  for (const p of data.phases) {
+    const w = score(p.items).total;
+    const m = el('div', 'milestone' + (p === here ? ' is-here' : ''), p.name.split(':')[0]);
+    m.style.insetInlineStart = ((acc + w) / s.total * 100) + '%';
+    if (p === here) m.textContent += ' (إنت هنا)';
+    ms.append(m); acc += w;
+  }
+
+  const now = document.getElementById('now'); now.replaceChildren();
+  for (const n of data.now) {
+    const li = el('li'); const t = el('span'); t.append(el('span', 'pulse'), n.title);
+    li.append(t, el('span', 'pill', `${n.who} · من ${n.since}`)); now.append(li);
+  }
+  if (!data.now.length) now.append(el('li', 'muted', 'مفيش حاجة شغالة'));
+  const next = document.getElementById('next'); next.replaceChildren(...data.next.map((x, i) => el('li', null, `${i + 1}. ${x}`)));
+  const log = document.getElementById('log'); log.replaceChildren(...data.log.slice(0, 8).map((x) => {
+    const li = el('li'); li.append(el('span', 'muted num', x.at + '  '), x.text); return li; }));
+
+  const ph = document.getElementById('phases'); ph.replaceChildren();
+  for (const p of data.phases) {
+    const sc = score(p.items); const v = (sc.done + sc.active) / sc.total;
+    const d = el('details'); d.open = open.has(p.id) || p === here;
+    d.addEventListener('toggle', () => d.open ? open.add(p.id) : open.delete(p.id));
+    const sum = el('summary'); const tr = el('div', 'track'); const f = el('div', 'track__fill'); f.style.inlineSize = (v * 100) + '%'; tr.append(f);
+    sum.append(el('span', null, p.name), tr, el('span', 'num', pct(v) + '%'));
+    const ul = el('ul');
+    for (const it of p.items) {
+      const li = el('li', 'item'); li.append(el('span', null, it.name));
+      const label = statusLabel[it.status] + (it.status === 'active' && it.progress != null ? ` ${pct(it.progress)}%` : '');
+      li.append(el('span', 'st st--' + it.status, label)); ul.append(li);
+    }
+    d.append(sum, ul); ph.append(d);
+  }
+}
+
+async function load() {
+  try {
+    const res = await fetch('progress.json', { cache: 'no-store' });
+    render(await res.json());
+    document.getElementById('error').hidden = true;
+  } catch (e) {
+    const err = document.getElementById('error'); err.hidden = false; err.textContent = 'تعذّر قراءة progress.json: ' + e.message;
+  }
+}
+load(); setInterval(load, 10000);
+</script>
+</body>
+</html>

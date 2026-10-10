@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Project progress",
+  "description": "Source of truth for project progress. Edit it with scripts/progress.mjs, never by hand.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["updated", "now", "next", "log", "phases"],
+  "properties": {
+    "updated": {
+      "description": "Local time of the last write, ISO 8601 with offset.",
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "now": {
+      "description": "Work in flight right now.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/now" }
+    },
+    "next": {
+      "description": "Upcoming work, in order.",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "log": {
+      "description": "Newest first. The CLI keeps the last 30 lines.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/log" }
+    },
+    "phases": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/phase" }
+    }
+  },
+  "$defs": {
+    "now": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "who", "since"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "who": { "type": "string", "minLength": 1 },
+        "since": { "type": "string", "minLength": 1 }
+      }
+    },
+    "log": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "text"],
+      "properties": {
+        "at": { "type": "string", "minLength": 1 },
+        "text": { "type": "string", "minLength": 1 }
+      }
+    },
+    "phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "items"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/item" }
+        }
+      }
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "w", "status"],
+      "properties": {
+        "id": {
+          "description": "Work package code such as B27, P3.1 or F5b. Unique across the file.",
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]*$"
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "w": { "description": "Weight, greater than zero.", "type": "number", "exclusiveMinimum": 0 },
+        "status": { "enum": ["done", "active", "todo"] },
+        "progress": {
+          "description": "Fraction 0..1. Only meaningful while status is active.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "commit": {
+          "description": "Short sha of the landing commit.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{4,40}$"
+        },
+        "doneAt": {
+          "description": "ISO date (or date-time) the item was finished.",
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}(T.+)?$"
+        }
+      }
+    }
+  }
+}

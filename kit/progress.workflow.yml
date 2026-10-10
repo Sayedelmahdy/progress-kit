@@ -1,0 +1,22 @@
+name: Progress
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/status/**', 'scripts/progress*.mjs', 'scripts/install-hooks.mjs', 'tools/progress-kit/**', '.githooks/**', '.github/workflows/progress.yml']
+  pull_request:
+    paths: ['docs/status/**', 'scripts/progress*.mjs', 'scripts/install-hooks.mjs', 'tools/progress-kit/**', '.githooks/**', '.github/workflows/progress.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/progress.mjs validate
+      - run: node --test scripts/progress.test.mjs

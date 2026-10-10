@@ -1,0 +1,1 @@
+{ "name": "project-progress", "version": "0.1.0", "description": "Shows where the current project stands (overall %, phases, now/next/done) from progress.json", "types": "./types/index.d.ts" }
